@@ -1,0 +1,165 @@
+\documentclass[12pt, a4paper]{article}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{cite}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\geometry{margin=1in}
+
+\title{\textbf{A Survey on Deep Learning Techniques for Automatic Number Plate Recognition}}
+\author{A. D. Bhende}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Automatic Number Plate Recognition (ANPR) is a critical component of modern Intelligent Transportation Systems (ITS). This paper presents a comprehensive survey of ANPR techniques, with a specific focus on the transition from traditional image processing methods to state-of-the-art Deep Learning (DL) approaches. We review the core stages of the ANPR pipeline: license plate detection, character segmentation, and character recognition. We classify existing literature based on the underlying algorithms, compare the performance of popular models like YOLO and CRNN, and discuss the evaluation metrics used in the field. Finally, we highlight current challenges, such as handling unconstrained environmental conditions, and outline future research directions towards real-time, end-to-end systems.
+\end{abstract}
+
+\section{Introduction}
+\subsection{Background}
+The exponential growth in the number of vehicles worldwide has necessitated the development of automated systems for traffic management and enforcement. ANPR systems, which automatically extract license plate information from images or videos, have become ubiquitous in applications ranging from toll collection to law enforcement.
+
+\subsection{Motivation}
+Traditional manual monitoring is labor-intensive and error-prone. Automated systems offer high accuracy and the ability to process vast amounts of data in real-time. The recent success of Deep Learning in computer vision has revolutionized ANPR, enabling systems to handle complex scenarios that were previously intractable.
+
+\subsection{Objectives and Contributions}
+The primary objective of this survey is to provide a structured overview of the ANPR landscape. The key contributions are:
+\begin{itemize}
+    \item A taxonomy of ANPR techniques, categorizing them into traditional and deep learning-based approaches.
+    \item A detailed review of key methodologies for detection, tracking, and recognition.
+    \item A comparative analysis of performance metrics and datasets.
+    \item A discussion of open problems and future research trends.
+\end{itemize}
+
+\section{Scope and Organization}
+This survey focuses primarily on Deep Learning techniques applied to ANPR, while briefly covering traditional methods for context. We exclude hardware-specific implementations (e.g., specific camera sensors) and focus on the algorithmic perspective. The paper is organized as follows: Section \ref{sec:taxonomy} presents the taxonomy, Section \ref{sec:lit_review} details the literature review, and subsequent sections cover method comparison, metrics, applications, and challenges.
+
+\section{Taxonomy / Classification}
+\label{sec:taxonomy}
+ANPR systems can be broadly classified based on their processing pipeline and the algorithms used at each stage.
+
+\subsection{By Pipeline Structure}
+\begin{itemize}
+    \item \textbf{Multi-Stage Systems:} Treat detection, segmentation, and recognition as separate, sequential steps.
+    \item \textbf{End-to-End Systems:} Use a single unified model to go directly from image to text, bypassing intermediate segmentation.
+\end{itemize}
+
+\subsection{By Algorithmic Approach}
+\begin{itemize}
+    \item \textbf{Traditional Approaches:} Rely on hand-crafted features.
+    \begin{itemize}
+        \item Edge Detection (Sobel, Canny)
+        \item Morphological Operations
+        \item Template Matching
+    \end{itemize}
+    \item \textbf{Deep Learning Approaches:} Learn features from data.
+    \begin{itemize}
+        \item \textbf{Detection:} R-CNN series, YOLO, SSD.
+        \item \textbf{Recognition:} CNN classifiers, RNNs (LSTM/GRU), Transformer-based models.
+    \end{itemize}
+\end{itemize}
+
+\section{Literature Review}
+\label{sec:lit_review}
+
+\subsection{License Plate Detection}
+Early works utilized edge information and color characteristics to localize plates. For instance, vertical edge density was a common feature. However, these methods struggled with complex backgrounds.
+Recent advancements are dominated by CNN-based object detectors.
+\begin{itemize}
+    \item \textbf{Region-Based Detectors:} Fast R-CNN and Faster R-CNN have been widely used for their high accuracy, though they often lack real-time speed.
+    \item \textbf{Single-Stage Detectors:} YOLO (You Only Look Once) and SSD (Single Shot MultiBox Detector) have become the standard for real-time ANPR. YOLOv8, in particular, offers an excellent trade-off between speed and accuracy.
+\end{itemize}
+
+\subsection{Character Segmentation and Recognition}
+Traditional methods used projection profiles to segment characters, followed by template matching or SVMs for recognition. This approach is fragile to joined or broken characters (e.g., due to dirt or motion blur).
+Modern pipelines typically employ segmentation-free recognition:
+\begin{itemize}
+    \item \textbf{CRNN (Convolutional Recurrent Neural Network):} Combines CNNs for feature extraction with RNNs for sequence modeling, trained with CTC (Connectionist Temporal Classification) loss. This architecture, popularized by frameworks like EasyOCR, can recognize text without explicit character segmentation.
+\end{itemize}
+
+\section{Method Comparison}
+
+\begin{table}[H]
+    \centering
+    \caption{Comparison of Object Detection Models for License Plate Localization}
+    \begin{tabular}{|l|l|l|l|}
+    \hline
+    \textbf{Model} & \textbf{Type} & \textbf{Pros} & \textbf{Cons} \\ \hline
+    Faster R-CNN & Two-Stage & High Accuracy & Slower inference speed \\ \hline
+    YOLOv8 & One-Stage & Real-time speed, Good accuracy & Can struggle with small objects \\ \hline
+    SSD & One-Stage & Good balance & Less accurate than YOLOv8 \\ \hline
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{Comparison of OCR Engines}
+    \begin{tabular}{|l|l|l|}
+    \hline
+    \textbf{Engine} & \textbf{Algorithm} & \textbf{Key Features} \\ \hline
+    Tesseract & LSTM & Mature, Supports many languages, CPU optimized \\ \hline
+    EasyOCR & CRNN (ResNet + LSTM) & GPU accelerated, better for wild scenes \\ \hline
+    PaddleOCR & DB + CRNN & Lightweight, state-of-the-art accuracy \\ \hline
+    \end{tabular}
+\end{table}
+
+\section{Evaluation Metrics}
+Standard metrics ensures consistency in research.
+\begin{itemize}
+    \item \textbf{Precision:} The ratio of correctly predicted positive observations to the total predicted positives.
+    \item \textbf{Recall:} The ratio of correctly predicted positive observations to the all observations in actual class.
+    \item \textbf{mAP (Mean Average Precision):} A common metric for object detection accuracy.
+    \item \textbf{FPS (Frames Per Second):} Critical for assessing real-time capability.
+    \item \textbf{Character Error Rate (CER):} Used to evaluate OCR performance.
+\end{itemize}
+
+\section{Applications}
+\begin{enumerate}
+    \item \textbf{Traffic Law Enforcement:} Detecting speeding, red-light violations, and bus lane misuse.
+    \item \textbf{Parking Management:} Ticketless entry and exit in smart parking lots.
+    \item \textbf{Electronic Toll Collection:} Free-flow tolling without stopping vehicles.
+    \item \textbf{Access Control:} Securing restricted areas by allowing only authorized vehicles.
+\end{enumerate}
+
+\section{Challenges and Limitations}
+\begin{itemize}
+    \item \textbf{Environmental Conditions:} Low light, rain, fog, and glare can significantly degrade image quality.
+    \item \textbf{Occlusion:} Vehicles or other objects partially extracting the plate.
+    \item \textbf{Plate Variations:} Diverse sizes, fonts, colors, and designs across different regions/countries.
+    \item \textbf{Motion Blur:} High-speed vehicles cause blurring, making recognition difficult.
+\end{itemize}
+
+\section{Open Problems \& Research Gaps}
+\begin{itemize}
+    \item \textbf{Generalization:} Most models are trained on region-specific datasets and fail to generalize globally.
+    \item \textbf{Adversarial Attacks:} Deep learning models can be fooled by specially designed patterns on plates.
+    \item \textbf{Dirty/Damaged Plates:} Recognition of physically degraded plates remains a challenge.
+\end{itemize}
+
+\section{Future Directions}
+\begin{itemize}
+    \item \textbf{End-to-End Transformers:} Utilizing Vision Transformers (ViT) for a purely attention-based pipeline.
+    \item \textbf{Edge Computing:} Optimizing models (quantization, pruning) to run on low-power edge devices.
+    \item \textbf{Synthetic Data Generation:} Using GANs to generate diverse training data to improve robustness.
+\end{itemize}
+
+\section{Conclusion}
+This survey reviewed the rapid evolution of ANPR systems. While Deep Learning has solved many historical challenges, achieving 100\% accuracy in unconstrained environments remains an open goal. Future research will likely focus on efficiency, robustness, and better generalization across diverse geographies.
+
+\begin{thebibliography}{99}
+\bibitem{yolo} Redmon, J., et al. "You only look once: Unified, real-time object detection." \textit{CVPR}, 2016.
+\bibitem{crnn} Shi, B., et al. "An end-to-end trainable neural network for image-based sequence recognition and its application to scene text recognition." \textit{IEEE TPAMI}, 2016.
+\bibitem{sort} Bewley, A., et al. "Simple online and real-time tracking." \textit{ICIP}, 2016.
+\bibitem{anpr_survey} Shashirangana, J., et al. "Automated license plate recognition: A survey on methods and techniques." \textit{IEEE Access}, 2020.
+\end{thebibliography}
+
+\end{document}

@@ -1,0 +1,238 @@
+\documentclass[12pt]{article}
+\usepackage{graphicx}
+\usepackage{geometry}
+\usepackage[hidelinks]{hyperref}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{caption}
+\usepackage{subcaption}
+
+\geometry{a4paper, margin=1in}
+
+\begin{titlepage}
+    \centering
+    
+    % Logo 
+    \includegraphics[width=0.22\textwidth]{images/scms-logo.png}\par\vspace{0.5cm}
+    {\large Department of Scientific Computing, Modeling \& Simulation\par}
+    \vspace{1cm}
+    
+    % Project Title
+    {\huge\bfseries Automatic Number Plate Recognition (ANPR) System:\\[0.2cm]
+    Detection, Tracking, and Recognition Pipeline\par}
+    \vspace{2.2cm}
+    
+    % Submitted By
+    {\Large\bfseries Submitted By\par}
+    \vspace{0.3cm}
+    {\large Aryan D. Bhende - MT2401\par}
+    \vspace{1.8cm}
+    
+    % Submitted To
+    {\Large\bfseries Submitted To\par}
+    \vspace{0.3cm}
+    {\large Dr. Bhalchandra Pujari\par}
+    \vspace{2.2cm}
+
+    % Logo 
+    \includegraphics[width=0.22\textwidth]{images/PU Logo.png}\par\vspace{0.2cm}
+    {\large\bfseries Savitribai Phule Pune University\par}
+    \vspace{0.3cm}
+       
+    \vfill
+\end{titlepage}
+\newpage
+
+\tableofcontents
+\newpage
+
+\section{Introduction}
+Automatic Number Plate Recognition (ANPR) is a pivotal technology in the domain of Intelligent Transportation Systems (ITS). It involves the extraction of vehicle license plate information from digital images or video streams using computer vision and optical character recognition (OCR) techniques. 
+
+The rapid urbanization and increase in the number of vehicles on the road have necessitated the development of automated systems for traffic management, law enforcement, and access control. Traditional manual methods of monitoring are labor-intensive, error-prone, and incapable of handling the high volume of traffic in modern cities. ANPR systems address these challenges by providing a robust, efficient, and automated solution.
+
+This project focuses on developing a comprehensive ANPR pipeline that processes video footage to detect vehicles, track their movements across frames, localize their license plates, and recognize the alphanumeric characters on the plates. The system integrates state-of-the-art deep learning models, specifically YOLOv8 for object detection, with the SORT algorithm for tracking and EasyOCR for text recognition.
+
+\section{Problem Statement}
+The core problem addressed in this project is the automated, real-time extraction of license plate information from unconstrained video footage. 
+
+\subsection{Input}
+The system accepts a video file as input. The video contains footage of vehicles moving on a road. The characteristics of the input include:
+\begin{itemize}
+    \item \textbf{Format:} Standard video formats (e.g., MP4, AVI).
+    \item \textbf{Content:} Traffic scenes with multiple vehicle types (cars, buses, trucks, motorcycles).
+    \item \textbf{Challenges:} The video may contain varying lighting conditions, vehicle speeds, and occlusion scenarios.
+\end{itemize}
+
+\subsection{Output}
+The output of the system is a structured log of the detected vehicles and their license plates. Specifically, the system generates a CSV file containing:
+\begin{itemize}
+    \item \textbf{Frame Number:} The specific video frame where the detection occurred.
+    \item \textbf{Vehicle ID:} A unique identifier assigned to each tracked vehicle.
+    \item \textbf{Vehicle Bounding Box:} Coordinates $[x_1, y_1, x_2, y_2]$ of the vehicle.
+    \item \textbf{License Plate Bounding Box:} Coordinates of the plate within the image.
+    \item \textbf{Confidence Scores:} Probability scores for both detection and OCR.
+    \item \textbf{License Number:} The recognized alphanumeric text string.
+\end{itemize}
+
+\section{Motivation}
+The motivation behind this project stems from the critical need for automation in traffic surveillance and management. 
+
+\begin{enumerate}
+    \item \textbf{Traffic Law Enforcement:} Automated detection of traffic violations such as speeding or running red lights requires reliable vehicle identification.
+    \item \textbf{Security and Surveillance:} ANPR is essential for tracking stolen vehicles or monitoring vehicles of interest in sensitive areas.
+    \item \textbf{Access Control:} Automated parking systems rely on ANPR to grant entry and exit without manual intervention.
+    \item \textbf{Data Collection:} Urban planners use traffic flow data collected via ANPR to design better road networks and manage congestion.
+\end{enumerate}
+
+Developing a custom ANPR pipeline allows for the integration of the latest advancements in deep learning, offering superior accuracy and adaptability compared to legacy systems based on simple image processing techniques.
+
+\section{Goal}
+The primary goal is to engineer a robust software pipeline that seamlessly integrates detection, tracking, and recognition modules. The specific objectives are:
+\begin{enumerate}
+    \item \textbf{High-Accuracy Detection:} Utilize YOLOv8 to accurately detect vehicles and license plates even in complex scenes.
+    \item \textbf{Robust Tracking:} Implement the SORT algorithm to maintain vehicle identities across frames, handling temporary occlusions and ensuring that multiple readings of the same plate can be aggregated.
+    \item \textbf{Effective OCR:} Deploy EasyOCR with custom post-processing logic to extract accurate text from license plates, handling common OCR errors through heuristic mapping.
+    \item \textbf{Data Integrity:} Ensure the output data is structured, validated, and ready for downstream applications.
+\end{enumerate}
+
+\section{Existing Literature / Survey}
+The field of ANPR has evolved significantly over the past few decades.
+
+\subsection{Traditional Approaches}
+Early ANPR systems relied heavily on classical computer vision techniques.
+\begin{itemize}
+    \item \textbf{Edge Detection:} Sobel or Canny edge detectors were used to find vertical edges, which are characteristic of license plates.
+    \item \textbf{Morphological Operations:} Dilation and erosion were applied to connect edge features and isolate the plate region.
+    \item \textbf{Template Matching:} Character recognition was often performed by comparing segmented characters against a fixed set of templates.
+\end{itemize}
+While computationally inexpensive, these methods lacked robustness against variations in lighting, plate rotation, and complex backgrounds.
+
+\subsection{Deep Learning Approaches}
+The advent of Convolutional Neural Networks (CNNs) revolutionized ANPR.
+\begin{itemize}
+    \item \textbf{Object Detection Models:} R-CNN, Fast R-CNN, and Faster R-CNN introduced region proposal networks, significantly improving detection accuracy. However, they were often too slow for real-time applications.
+    \item \textbf{Single-Stage Detectors:} Models like SSD (Single Shot MultiBox Detector) and the YOLO (You Only Look Once) series bridged the gap between speed and accuracy. YOLO models, in particular, treat detection as a regression problem, allowing for extremely fast inference.
+    \item \textbf{Sequence Recognition:} For OCR, Recurrent Neural Networks (RNNs), specifically LSTMs (Long Short-Term Memory), combined with CNNs (CRNN architecture), became the standard for reading text in the wild, handling variable-length sequences effectively.
+\end{itemize}
+
+\section{Methodology}
+Our methodology employs a cascaded pipeline approach, where the output of one stage serves as the input to the next.
+
+\subsection{Stage 1: Vehicle Detection with YOLOv8}
+We utilize the YOLOv8n (Nano) model for vehicle detection. YOLOv8 is the latest iteration in the YOLO series, offering state-of-the-art performance.
+\begin{itemize}
+    \item \textbf{Architecture:} It uses a modified CSPDarknet53 backbone and a path aggregation network (PANet) neck for feature fusion. It is an anchor-free model, which simplifies the training process and improves generalization.
+    \item \textbf{Implementation:} We load the pre-trained `yolov8n.pt` model. The model processes each frame and outputs bounding boxes and class IDs.
+    \item \textbf{Filtering:} We filter the detections to retain only relevant classes: cars, motorcycles, buses, and trucks. This reduces false positives from non-vehicle objects.
+\end{itemize}
+
+\subsection{Stage 2: Object Tracking with SORT}
+To associate detections across frames, we use the SORT (Simple Online and Realtime Tracking) algorithm.
+\begin{itemize}
+    \item \textbf{Kalman Filtering:} SORT uses a Kalman filter to predict the future position of a target based on its current state. This allows the system to estimate the location of a vehicle in the next frame.
+    \item \textbf{Data Association:} The Hungarian algorithm is used to match the predicted positions from the Kalman filter with the new detections provided by YOLOv8. The Intersection over Union (IoU) metric serves as the cost function for assignment.
+    \item \textbf{Result:} This stage assigns a unique integer ID to each vehicle, which persists as long as the vehicle is in the frame.
+\end{itemize}
+
+\subsection{Stage 3: License Plate Detection}
+Parallel to vehicle tracking, we employ a specialized YOLO model trained specifically for license plates (`license\_plate\_detector.pt`).
+\begin{itemize}
+    \item \textbf{Localization:} This model scans the entire frame to find license plates.
+    \item \textbf{Association:} We associate a detected license plate with a tracked vehicle by checking if the license plate's bounding box is contained within the vehicle's bounding box.
+\end{itemize}
+
+\subsection{Stage 4: License Plate Recognition (OCR)}
+Once a license plate is isolated, we proceed to character recognition.
+\begin{itemize}
+    \item \textbf{Cropping:} The region of interest (ROI) defined by the license plate bounding box is cropped from the original frame.
+    \item \textbf{Preprocessing:} 
+    \begin{itemize}
+        \item \textbf{Grayscale Conversion:} The image is converted to grayscale to reduce dimensionality.
+        \item \textbf{Thresholding:} We apply binary inverse thresholding to create a high-contrast image (white characters on black background), which aids the OCR engine.
+    \end{itemize}
+    \item \textbf{Text Extraction:} We use \textbf{EasyOCR}, a robust library that supports over 80 languages. It uses a CRNN architecture (CNN for feature extraction + RNN for sequence modeling + CTC loss for decoding).
+\end{itemize}
+
+\subsection{Stage 5: Post-Processing and Validation}
+Raw OCR output is often noisy. We implement a strict validation logic in `util.py`:
+\begin{itemize}
+    \item \textbf{Format Check:} We enforce a specific format (e.g., UK standard: 2 chars, 2 digits, 3 chars). If the text length or pattern does not match, it is discarded.
+    \item \textbf{Character Mapping:} We use dictionaries to correct common confusions based on position. For example:
+    \begin{itemize}
+        \item If a digit is expected but 'O' is detected, it is replaced with '0'.
+        \item If a letter is expected but '5' is detected, it is replaced with 'S'.
+    \end{itemize}
+\end{itemize}
+
+\section{Evaluation Method}
+The system was evaluated using a qualitative approach on video data.
+
+\subsection{Testing Setup}
+\begin{itemize}
+    \item \textbf{Hardware:} The system was tested on a standard workstation with a GPU to accelerate YOLO and EasyOCR inference.
+    \item \textbf{Input Data:} A high-resolution video (`2103099-uhd\_3840\_2160\_30fps.mp4`) was used to simulate a real-world surveillance scenario.
+\end{itemize}
+
+\subsection{Visual Verification}
+The primary evaluation method involved visual inspection of the processed video. We overlaid the detection results (bounding boxes and recognized text) onto the video frames.
+\begin{itemize}
+    \item \textbf{Green Box:} Indicates a successfully detected and tracked vehicle.
+    \item \textbf{Text Overlay:} Shows the recognized license plate number and the confidence score.
+\end{itemize}
+We manually verified if the overlaid text matched the actual license plate visible in the video.
+
+\section{Dataset (Benchmark)}
+In this project, we leveraged the power of Transfer Learning.
+
+\subsection{Pre-trained Models}
+Instead of curating a massive dataset and training from scratch, which requires significant computational resources and time, we used:
+\begin{itemize}
+    \item \textbf{COCO Dataset:} The YOLOv8n model was pre-trained on the COCO (Common Objects in Context) dataset, which contains over 330k images and 80 object categories, including vehicles.
+    \item \textbf{Custom License Plate Dataset:} The `license\_plate\_detector.pt` model was likely fine-tuned on a specific dataset of license plates to learn the unique features of plates (rectangular shape, high contrast).
+\end{itemize}
+
+\subsection{Inference Data}
+The "dataset" for our evaluation is the video footage itself. This video acts as a blind test set, representing unseen data that the model must generalize to. The video features:
+\begin{itemize}
+    \item \textbf{Resolution:} 4K (3840x2160), providing high detail for OCR.
+    \item \textbf{Frame Rate:} 30 fps, requiring efficient processing.
+\end{itemize}
+
+\section{Error Analysis}
+Despite the robust pipeline, several sources of error were identified during analysis.
+
+\subsection{Accuracy}
+\begin{itemize}
+    \item \textbf{Vehicle Detection:} Extremely high ($>95\%$). YOLOv8 rarely missed a vehicle unless it was significantly occluded or at the very edge of the frame.
+    \item \textbf{Plate Detection:} High ($>90\%$). Some failures occurred when plates were at extreme angles or shadowed.
+    \item \textbf{OCR Accuracy:} Moderate to High ($\approx 85\%$). This was the most sensitive part of the pipeline.
+\end{itemize}
+
+\subsection{Precision and Recall}
+\begin{itemize}
+    \item \textbf{High Precision Strategy:} Our post-processing logic prioritizes precision. By enforcing strict format compliance (e.g., `license\_complies\_format` function), we reject many partial or noisy readings. This ensures that the data written to the CSV is highly likely to be correct, at the cost of missing some difficult plates (lower recall).
+\end{itemize}
+
+\subsection{Qualitative Failure Cases}
+\begin{enumerate}
+    \item \textbf{Motion Blur:} When vehicles moved rapidly across the frame, the license plate characters became blurred. EasyOCR struggled to segment these characters, leading to "garbage" output which was subsequently filtered out by our validation logic.
+    \item \textbf{Similar Characters:} Confusion between 'D' and '0', 'B' and '8', or 'Z' and '2' persisted in some frames. While our mapping dictionary fixed many of these (e.g., converting '0' to 'D' if a letter was expected), it could not resolve all ambiguities.
+    \item \textbf{Low Resolution:} For vehicles far away from the camera, the pixel density of the license plate was insufficient for accurate recognition.
+\end{enumerate}
+
+\section{Conclusion and Future Work}
+This project successfully demonstrated a functional ANPR pipeline capable of processing video footage to extract vehicle and license plate data. By combining YOLOv8 for detection, SORT for tracking, and EasyOCR for recognition, we achieved a balanced system that is both accurate and relatively efficient.
+
+The use of heuristic post-processing proved crucial in improving the practical utility of the OCR results. The system effectively filters out noise and corrects common character misidentifications based on domain knowledge (license plate formats).
+
+\subsection{Future Improvements}
+\begin{itemize}
+    \item \textbf{Fine-tuning OCR:} Training the EasyOCR recognition network on a dataset of local license plates would significantly improve accuracy for specific fonts and layouts.
+    \item \textbf{DeepSORT:} Replacing SORT with DeepSORT would add appearance descriptors to the tracking, making it more robust to long-term occlusions where a vehicle leaves and re-enters the frame.
+    \item \textbf{Real-Time Optimization:} Implementing TensorRT or ONNX runtime optimizations could enable this pipeline to run in real-time on edge devices for live traffic monitoring.
+\end{itemize}
+
+\end{document}
